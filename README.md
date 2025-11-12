@@ -1,16 +1,16 @@
-🔥 HANDY RECON
-## Advanced OSINT Intelligence System
+# HANDY REAPER
 
-Cyberzilla™ - Ultimate Digital Reconnaissance Platform
+Advanced OSINT Intelligence System
 
-[![OSINT Security Scan](https://github.com/FJ-cyberzilla/Handy-Osint/actions/workflows/pylint.yml/badge.svg)](https://github.com/FJ-cyberzilla/Handy-Osint/actions/workflows/pylint.yml)
----
+# Cyberzilla™ - Ultimate Digital Reconnaissance Platform
+
+https://github.com/FJ-cyberzilla/Handy-Osint/actions/workflows/security-scan.yml/badge.svg
 
 🎯 What HANDY REAPER Can Do
 
 Core Intelligence Capabilities
 
-· 🧠 AI-Powered Pattern Analysis - Advanced username profiling and risk assessment
+· 🤖 AI-Powered Pattern Analysis - Advanced username profiling and risk assessment
 · 💪 Mass Platform Scanning - Concurrent reconnaissance across 50+ social media platforms
 · 🌐 DNS Intelligence - Comprehensive domain security and record analysis
 · 🔍 Network Reconnaissance - URL parsing, IP resolution, and network mapping
@@ -18,17 +18,9 @@ Core Intelligence Capabilities
 
 Platform Coverage (50+ Platforms)
 
-Category Platforms
-Social Media Twitter, Facebook, Instagram, LinkedIn, Reddit, Pinterest
-Professional GitHub, GitLab, Stack Overflow, Behance, Dribbble, AngelList
-Gaming Steam, Twitch, Xbox, PlayStation, Discord, Epic Games
-Media YouTube, TikTok, Spotify, SoundCloud, Vimeo
-Forums Product Hunt, Hacker News, Quora, Medium, Dev.to
-Niche Etsy, eBay, Goodreads, MyAnimeList, Letterboxd
 
-Advanced Features
 
-· ⚡ High-Performance Scanning - Async concurrent requests with intelligent batching
+- ⚡ High-Performance Scanning - Async concurrent requests with intelligent batching
 · 🛡️ Enterprise Security - Rate limiting, proxy rotation, and stealth headers
 · 📈 Risk Intelligence - Pattern-based threat scoring and exposure levels
 · 💾 Comprehensive Reporting - JSON exports with executive summaries
@@ -40,15 +32,6 @@ Advanced Features
 
 HANDY REAPER vs. Traditional OSINT Tools
 
-Feature HANDY RECON Sherlock Maigret SocialScan
-Platform Coverage 🟢 50+ platforms 🟡 30 platforms 🟢 40 platforms 🟡 15 platforms
-AI Pattern Analysis 🟢 Advanced profiling ❌ Basic only 🟡 Limited ❌ None
-DNS Intelligence 🟢 Full DNS analysis ❌ No DNS ❌ No DNS ❌ No DNS
-Network Recon 🟢 URL/IP analysis ❌ No network ❌ No network ❌ No network
-Risk Assessment 🟢 Automated scoring ❌ Manual 🟡 Basic ❌ None
-Rate Limiting 🟢 Smart sliding window 🟡 Basic 🟡 Basic 🟡 Basic
-Proxy Support 🟢 Rotation & config 🟡 Static only 🟡 Static only ❌ No proxy
-Reporting 🟢 JSON + Executive 🟡 Text only 🟡 Text/JSON 🟡 Basic
 
 Performance Comparison
 
@@ -143,4 +126,107 @@ For Enterprises
 
 ---
 
-🔥 HANDY REACON- When You Need More Than Just Presence Detection
+🛠️ Quick Start
+
+Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/FJ-cyberzilla/Handy-Osint.git
+cd Handy-Osint
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run the tool
+python handy_reaper.py username
+```
+
+Basic Usage
+
+```bash
+# Basic scan
+python handy_reaper.py target_username
+
+# With proxy
+python handy_reaper.py target_username --proxy http://proxy:8080
+
+# Save results to custom directory
+python handy_reaper.py target_username --output-dir ./reports
+```
+
+Advanced Usage
+
+```bash
+# With proxy rotation from file
+python handy_reaper.py target_username --proxy-list proxies.txt
+
+# Skip saving results (terminal output only)
+python handy_reaper.py target_username --no-save
+```
+
+📋 Output Example
+
+```
+🔥 HANDY REAPER - OSINT REPORT
+==================================================
+📊 Summary:
+  Platforms Found: 12
+  Total Checked: 50
+  Success Rate: 85.7%
+  Risk Level: MEDIUM
+
+🔍 Found Profiles:
+  ✓ github
+  ✓ twitter
+  ✓ linkedin
+  ✓ instagram
+  ... and 8 more
+
+⚠️  THREAT ASSESSMENT:
+  Digital Footprint: HIGH
+  Pattern Risk: MEDIUM
+
+💡 RECOMMENDATIONS:
+  • High digital footprint detected - consider privacy settings review
+==================================================
+```
+
+---
+
+🔒 Security Features
+
+· Rate Limiting: Intelligent per-platform request throttling
+· Proxy Support: HTTP/HTTPS proxy with rotation capabilities
+· Stealth Mode: Realistic browser headers and randomized delays
+· Error Handling: Comprehensive retry logic with exponential backoff
+· Local Processing: All analysis happens locally - no data sent to external servers
+
+---
+
+📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+---
+
+🤝 Contributing
+
+We welcome contributions! Please see our Contributing Guide for details.
+
+---
+
+⚠️ Legal Disclaimer
+
+This tool is designed for:
+
+· Security research
+· Authorized penetration testing
+· Educational purposes
+· Personal security audits
+
+Always ensure you have proper authorization before scanning any targets. The developers are not responsible for misuse of this tool.
+
+---
+
+🔥 HANDY REAPER - When You Need More Than Just Presence Detection
