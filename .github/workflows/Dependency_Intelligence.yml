@@ -1,0 +1,41 @@
+name: Dependency Intelligence
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * 1'  # Every Monday at 6 AM
+
+permissions:
+  id-token: write
+  contents: write
+
+jobs:
+  component-intelligence:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Comprehensive Component Detection
+      uses: actions/component-detection-dependency-submission-action@main
+      with:
+        filePath: '.'
+        detectorsFilter: 'Pip,Npm,Maven,NuGet'  # Multiple ecosystems
+        detectorArgs: 'Pip=EnableIfDefaultOff,Npm=EnableIfDefaultOff'
+        directoryExclusionList: 'test,dist,node_modules,.github'
+        correlator: 'handy-reaper-full-scan'
+    
+    - name: Generate Dependency Report
+      run: |
+        echo "📊 Dependency Intelligence Report"
+        echo "================================="
+        echo "✅ Dependencies submitted to GitHub Security"
+        echo "🔍 Now visible in:"
+        echo "   - Dependabot alerts"
+        echo "   - Dependency graph"
+        echo "   - Security overview"
+        echo "📈 Benefits:"
+        echo "   - Automatic vulnerability detection"
+        echo "   - License compliance monitoring"
+        echo "   - Dependency update recommendations"
