@@ -1,4 +1,4 @@
-![24751](https://github.com/user-attachments/assets/8f17cee4-a5a9-418e-b2ce-158c26768cc5)
+
 # HANDY REAPER
 
 Advanced OSINT Intelligence System
@@ -33,7 +33,7 @@ Platform Coverage (50+ Platforms)
 
 HANDY REAPER vs. Traditional OSINT Tools
 
-
+![24751](https://github.com/user-attachments/assets/8f17cee4-a5a9-418e-b2ce-158c26768cc5)
 Performance Comparison
 
 Metric HANDY REAPER Alternatives
@@ -116,6 +116,8 @@ Intelligence Depth
 For Security Teams
 
 "Combines the speed of automated scanning with the depth of manual analysis"
+![24749](https://github.com/user-attachments/assets/a0eb7d0a-d02f-4404-a995-cb5a21b357f9)
+
 
 For Researchers
 
