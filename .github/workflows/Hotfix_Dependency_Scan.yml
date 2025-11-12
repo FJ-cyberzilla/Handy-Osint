@@ -1,0 +1,28 @@
+name: Hotfix Dependency Scan
+
+on:
+  push:
+    branches: [hotfix/**]
+
+permissions:
+  id-token: write
+  contents: write
+
+jobs:
+  hotfix-dependencies:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout hotfix
+      uses: actions/checkout@v4
+    
+    - name: Fast Component Detection
+      uses: actions/component-detection-dependency-submission-action@main
+      with:
+        filePath: '.'
+        detectorsFilter: 'Pip'  # Only check Python for hotfixes
+        correlator: 'hotfix-${{ github.sha }}'
+    
+    - name: Quick Security Check
+      run: |
+        pip install safety
+        safety check --short
