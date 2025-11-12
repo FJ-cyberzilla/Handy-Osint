@@ -5,7 +5,6 @@ Advanced OSINT Intelligence System
 
 # Cyberzilla™ - Ultimate Digital Reconnaissance Platform
 
-https://github.com/FJ-cyberzilla/Handy-Osint/actions/workflows/security-scan.yml/badge.svg
 
 🎯 What HANDY REAPER Can Do
 
