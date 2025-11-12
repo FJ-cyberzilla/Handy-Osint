@@ -1,5 +1,8 @@
 name: OSINT Security Scan
 
+permissions:
+  contents: read
+
 on: [push, pull_request]
 
 jobs:
