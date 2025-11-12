@@ -3,6 +3,7 @@
 
 Cyberzilla™ - Ultimate Digital Reconnaissance Platform
 
+[![OSINT Security Scan](https://github.com/FJ-cyberzilla/Handy-Osint/actions/workflows/pylint.yml/badge.svg)](https://github.com/FJ-cyberzilla/Handy-Osint/actions/workflows/pylint.yml)
 ---
 
 🎯 What HANDY REAPER Can Do
