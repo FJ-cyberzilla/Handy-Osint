@@ -14,7 +14,7 @@ import os
 import argparse
 import socket
 import dns.resolver
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Dict, List, Any, Optional
 from collections import defaultdict
 from dataclasses import dataclass, asdict
@@ -23,10 +23,7 @@ from pathlib import Path
 
 # Color codes for terminal output
 class Colors:
-    """Terminal color codes"""
     PINK = '\033[95m'
-    BRIGHT_PINK = '\033[38;5;213m'
-    HOT_PINK = '\033[38;5;198m'
     CYAN = '\033[96m'
     GREEN = '\033[92m'
     YELLOW = '\033[93m'
@@ -36,9 +33,8 @@ class Colors:
     END = '\033[0m'
 
 def display_banner():
-    """Display the awesome pink HANDY REAPER banner"""
     banner = f"""
-{Colors.BRIGHT_PINK}{Colors.BOLD}
+{Colors.PINK}{Colors.BOLD}
 888 888                      888               888 88e                                     
 888 888  ,"Y88b 888 8e   e88 888 Y8b Y888P     888 888D  ,e e,   e88'888  e88 88e  888 8e  
 8888888 "8" 888 888 88b d888 888  Y8b Y8P  888 888 88"  d88 88b d888  '8 d888 888b 888 88b 
@@ -47,7 +43,7 @@ def display_banner():
                                     888                                                    
                                     888                                                    
 {Colors.END}
-{Colors.HOT_PINK}{Colors.BOLD}
+{Colors.PINK}{Colors.BOLD}
 🔥 HANDY REAPER - Advanced OSINT Intelligence System 🔥
           Cyberzilla™ - MMXXVI - Ultimate Reconnaissance
 {Colors.END}
@@ -66,9 +62,8 @@ logging.basicConfig(
 
 @dataclass
 class RateLimitConfig:
-    """Rate limiting configuration"""
     max_requests: int = 10
-    time_window: int = 60  # seconds
+    time_window: int = 60
     requests: List[float] = None
     
     def __post_init__(self):
@@ -77,7 +72,6 @@ class RateLimitConfig:
 
 @dataclass
 class ProxyConfig:
-    """Proxy configuration"""
     enabled: bool = False
     http_proxy: Optional[str] = None
     https_proxy: Optional[str] = None
@@ -89,25 +83,19 @@ class ProxyConfig:
             self.proxy_list = []
 
 class RateLimiter:
-    """Advanced rate limiter with sliding window"""
-    
     def __init__(self, max_requests: int = 10, time_window: int = 60):
         self.max_requests = max_requests
         self.time_window = time_window
         self.requests = defaultdict(list)
         
     async def acquire(self, key: str = "default") -> bool:
-        """Acquire permission to make a request"""
         current_time = time.time()
-        
-        # Clean old requests
         self.requests[key] = [
             req_time for req_time in self.requests[key]
             if current_time - req_time < self.time_window
         ]
         
         if len(self.requests[key]) >= self.max_requests:
-            # Calculate wait time
             oldest_request = min(self.requests[key])
             wait_time = self.time_window - (current_time - oldest_request)
             logging.warning(f"Rate limit reached for {key}. Waiting {wait_time:.2f}s")
@@ -118,43 +106,24 @@ class RateLimiter:
         return True
 
 class DNSAnalyzer:
-    """DNS reconnaissance and analysis"""
-    
     def __init__(self):
         self.resolver = dns.resolver.Resolver()
         self.resolver.timeout = 5
         self.resolver.lifetime = 5
         
     async def analyze_domain(self, domain: str) -> Dict[str, Any]:
-        """Perform comprehensive DNS analysis"""
         results = {
             'domain': domain,
             'records': {},
             'security': {},
-            'reputation': {},
             'timestamp': datetime.now().isoformat()
         }
         
         try:
-            # A Records
-            results['records']['A'] = await self._get_dns_records(domain, 'A')
+            record_types = ['A', 'AAAA', 'MX', 'TXT', 'NS', 'CNAME']
+            for record_type in record_types:
+                results['records'][record_type] = await self._get_dns_records(domain, record_type)
             
-            # AAAA Records (IPv6)
-            results['records']['AAAA'] = await self._get_dns_records(domain, 'AAAA')
-            
-            # MX Records
-            results['records']['MX'] = await self._get_dns_records(domain, 'MX')
-            
-            # TXT Records (SPF, DKIM, etc.)
-            results['records']['TXT'] = await self._get_dns_records(domain, 'TXT')
-            
-            # NS Records
-            results['records']['NS'] = await self._get_dns_records(domain, 'NS')
-            
-            # CNAME Records
-            results['records']['CNAME'] = await self._get_dns_records(domain, 'CNAME')
-            
-            # Security checks
             results['security'] = await self._check_security(domain, results['records'])
             
         except Exception as error:
@@ -164,7 +133,6 @@ class DNSAnalyzer:
         return results
     
     async def _get_dns_records(self, domain: str, record_type: str) -> List[str]:
-        """Get DNS records of specific type"""
         try:
             answers = self.resolver.resolve(domain, record_type)
             return [str(rdata) for rdata in answers]
@@ -175,83 +143,33 @@ class DNSAnalyzer:
             return []
     
     async def _check_security(self, domain: str, records: Dict) -> Dict[str, Any]:
-        """Check domain security features"""
         security = {
             'spf_configured': False,
             'dmarc_configured': False,
-            'dkim_hints': False,
-            'dnssec': False
+            'dkim_hints': False
         }
         
-        # Check SPF
         for txt in records.get('TXT', []):
-            if 'v=spf1' in txt.lower():
+            txt_lower = txt.lower()
+            if 'v=spf1' in txt_lower:
                 security['spf_configured'] = True
-            if 'v=dmarc1' in txt.lower():
+            if 'v=dmarc1' in txt_lower:
                 security['dmarc_configured'] = True
-            if 'dkim' in txt.lower():
+            if 'dkim' in txt_lower:
                 security['dkim_hints'] = True
         
         return security
 
-class NetworkAnalyzer:
-    """Network-level reconnaissance"""
-    
-    @staticmethod
-    async def analyze_url(url: str) -> Dict[str, Any]:
-        """Analyze URL and extract network information"""
-        results = {
-            'url': url,
-            'parsed': {},
-            'ip_info': {},
-            'ssl_info': {},
-            'timestamp': datetime.now().isoformat()
-        }
-        
-        try:
-            from urllib.parse import urlparse
-            parsed = urlparse(url)
-            
-            results['parsed'] = {
-                'scheme': parsed.scheme,
-                'hostname': parsed.hostname,
-                'port': parsed.port,
-                'path': parsed.path
-            }
-            
-            # Get IP address
-            if parsed.hostname:
-                try:
-                    ip_address = socket.gethostbyname(parsed.hostname)
-                    results['ip_info'] = {
-                        'ip': ip_address,
-                        'hostname': parsed.hostname,
-                        'resolved': True
-                    }
-                except socket.gaierror:
-                    results['ip_info'] = {'resolved': False, 'error': 'DNS resolution failed'}
-            
-        except Exception as error:
-            results['error'] = str(error)
-            logging.error(f"Network analysis failed for {url}: {error}")
-        
-        return results
-
 class EnhancedOSINTSystem:
-    """Advanced OSINT Investigation System with enhanced features"""
-    
     def __init__(self, proxy_config: Optional[ProxyConfig] = None):
         self.session = None
-        self.results = {}
         self.rate_limiter = RateLimiter(max_requests=10, time_window=60)
         self.dns_analyzer = DNSAnalyzer()
-        self.network_analyzer = NetworkAnalyzer()
         self.proxy_config = proxy_config or ProxyConfig()
         self.current_proxy_index = 0
         
-        # Extended platform list (50+ platforms)
+        # Platform list
         self.platforms = {
-            # Social Media
             'github': 'https://github.com/{}',
             'twitter': 'https://twitter.com/{}',
             'instagram': 'https://instagram.com/{}',
@@ -265,81 +183,31 @@ class EnhancedOSINTSystem:
             'stackoverflow': 'https://stackoverflow.com/users/{}',
             'hackernews': 'https://news.ycombinator.com/user?id={}',
             'producthunt': 'https://www.producthunt.com/@{}',
-            
-            # Professional
             'behance': 'https://www.behance.net/{}',
             'dribbble': 'https://dribbble.com/{}',
-            'angellist': 'https://angel.co/u/{}',
-            'crunchbase': 'https://www.crunchbase.com/person/{}',
-            
-            # Gaming
             'twitch': 'https://www.twitch.tv/{}',
             'steam': 'https://steamcommunity.com/id/{}',
-            'xbox': 'https://account.xbox.com/en-us/profile?gamertag={}',
-            'playstation': 'https://my.playstation.com/profile/{}',
-            'discord.id': 'https://discord.com/users/{}',
-            'epicgames': 'https://www.epicgames.com/id/{}',
-            
-            # Video/Streaming
             'youtube': 'https://www.youtube.com/@{}',
-            'vimeo': 'https://vimeo.com/{}',
-            'dailymotion': 'https://www.dailymotion.com/{}',
             'tiktok': 'https://www.tiktok.com/@{}',
-            'snapchat': 'https://www.snapchat.com/add/{}',
-            
-            # Music
             'spotify': 'https://open.spotify.com/user/{}',
             'soundcloud': 'https://soundcloud.com/{}',
-            'bandcamp': 'https://{}.bandcamp.com',
-            'lastfm': 'https://www.last.fm/user/{}',
-            
-            # Photography
             'flickr': 'https://www.flickr.com/people/{}',
-            '500px': 'https://500px.com/p/{}',
-            'unsplash': 'https://unsplash.com/@{}',
-            
-            # Forums/Communities
-            'patreon': 'https://www.patreon.com/{}',
-            'buymeacoffee': 'https://www.buymeacoffee.com/{}',
-            'ko-fi': 'https://ko-fi.com/{}',
-            'gumroad': 'https://gumroad.com/{}',
-            
-            # Code/Tech
             'gitlab': 'https://gitlab.com/{}',
             'bitbucket': 'https://bitbucket.org/{}',
-            'codepen': 'https://codepen.io/{}',
-            'replit': 'https://replit.com/@{}',
-            'kaggle': 'https://www.kaggle.com/{}',
-            
-            # Knowledge/Q&A
             'quora': 'https://www.quora.com/profile/{}',
             'aboutme': 'https://about.me/{}',
-            'linktree': 'https://linktr.ee/{}',
-            'gravatar': 'https://en.gravatar.com/{}',
-            
-            # Niche platforms
             'etsy': 'https://www.etsy.com/shop/{}',
             'ebay': 'https://www.ebay.com/usr/{}',
             'goodreads': 'https://www.goodreads.com/user/show/{}',
-            'myanimelist': 'https://myanimelist.net/profile/{}',
-            'letterboxd': 'https://letterboxd.com/{}',
         }
     
     async def initialize(self):
-        """Initialize async session with proxy support"""
-        connector_kwargs = {}
-        
-        if self.proxy_config.enabled:
-            if self.proxy_config.http_proxy:
-                logging.info(f"Using proxy: {self.proxy_config.http_proxy}")
-        
         self.session = aiohttp.ClientSession(
             timeout=aiohttp.ClientTimeout(total=15),
             connector=aiohttp.TCPConnector(ssl=False, limit=100)
         )
     
     def get_proxy(self) -> Optional[str]:
-        """Get next proxy from rotation"""
         if not self.proxy_config.rotation_enabled or not self.proxy_config.proxy_list:
             return self.proxy_config.http_proxy
         
@@ -348,9 +216,7 @@ class EnhancedOSINTSystem:
         return proxy
     
     async def brain_analyze(self, username: str) -> Dict[str, Any]:
-        """AI Brain - Advanced pattern analysis"""
         logging.info(f"{Colors.PINK}🧠 Brain analyzing: {username}{Colors.END}")
-        
         await asyncio.sleep(0.3)
         
         features = {
@@ -365,22 +231,18 @@ class EnhancedOSINTSystem:
             'digit_count': sum(c.isdigit() for c in username),
         }
         
-        # Advanced pattern recognition
         patterns = []
         if any(x in username.lower() for x in ['admin', 'test', 'user', 'demo']):
             patterns.append("generic")
         if len(username) < 4:
             patterns.append("short")
-        if sum(c.isdigit() for c in username) > len(username) / 2:
+        if features['digit_count'] > len(username) / 2:
             patterns.append("numeric_heavy")
         if username.lower() == username and '_' not in username:
             patterns.append("simple_lowercase")
-        if any(year in username for year in ['199', '200', '201', '202']):
-            patterns.append("contains_year")
         
         pattern_type = patterns[0] if patterns else "custom"
         
-        # Risk scoring
         risk_factors = {
             'common_pattern': pattern_type == "generic",
             'short_username': len(username) < 5,
@@ -405,15 +267,13 @@ class EnhancedOSINTSystem:
         }
     
     async def muscle_scan(self, username: str) -> Dict[str, Any]:
-        """Muscle - High-performance concurrent scanning with rate limiting"""
         logging.info(f"{Colors.CYAN}💪 Muscle scanning across {len(self.platforms)} platforms{Colors.END}")
         
         results = {}
         found_count = 0
         error_count = 0
         
-        # Scan in batches to respect rate limits
-        batch_size = 10
+        batch_size = 5
         platform_items = list(self.platforms.items())
         
         for i in range(0, len(platform_items), batch_size):
@@ -428,7 +288,6 @@ class EnhancedOSINTSystem:
                 )
                 tasks.append(task)
             
-            # Run batch concurrently
             batch_results = await asyncio.gather(*tasks, return_exceptions=True)
             
             for (platform, _), result in zip(batch, batch_results):
@@ -444,7 +303,6 @@ class EnhancedOSINTSystem:
                     if result.get('status') == 'found':
                         found_count += 1
             
-            # Brief pause between batches
             if i + batch_size < len(platform_items):
                 await asyncio.sleep(0.5)
         
@@ -468,14 +326,9 @@ class EnhancedOSINTSystem:
         username: str,
         max_retries: int = 3
     ) -> Dict[str, Any]:
-        """Check platform with retry logic and rate limiting"""
-        
         for attempt in range(max_retries):
             try:
-                # Apply rate limiting
                 await self.rate_limiter.acquire(platform)
-                
-                # Get proxy if enabled
                 proxy = self.get_proxy() if self.proxy_config.enabled else None
                 
                 headers = {
@@ -495,14 +348,11 @@ class EnhancedOSINTSystem:
                     timeout=aiohttp.ClientTimeout(total=10)
                 ) as response:
                     
-                    # Check response
                     status = response.status
                     final_url = str(response.url)
                     
-                    # Platform-specific logic
                     found = False
                     if status == 200:
-                        # Some platforms redirect to different pages when not found
                         if platform == 'github' and '/search?' not in final_url:
                             found = True
                         elif platform == 'instagram' and final_url == url:
@@ -515,7 +365,6 @@ class EnhancedOSINTSystem:
                         'status_code': status,
                         'url': final_url,
                         'platform': platform,
-                        'response_time': response.headers.get('X-Response-Time', 'N/A'),
                         'attempt': attempt + 1
                     }
                     
@@ -525,3 +374,122 @@ class EnhancedOSINTSystem:
                         'status': 'timeout',
                         'platform': platform,
                         'error': 'Request timeout',
+                        'attempts': attempt + 1
+                    }
+                await asyncio.sleep(2 ** attempt)
+                
+            except Exception as error:
+                if attempt == max_retries - 1:
+                    return {
+                        'status': 'error',
+                        'platform': platform,
+                        'error': str(error),
+                        'attempts': attempt + 1
+                    }
+                await asyncio.sleep(2 ** attempt)
+        
+        return {'status': 'failed', 'platform': platform}
+    
+    async def full_osint_scan(self, username: str) -> Dict[str, Any]:
+        display_banner()
+        logging.info(f"{Colors.BOLD}{Colors.PINK}🔥 Starting OSINT scan for: {username}{Colors.END}")
+        
+        try:
+            await self.initialize()
+            
+            brain_results = await self.brain_analyze(username)
+            muscle_results = await self.muscle_scan(username)
+            
+            all_results = {
+                'brain_analyze': brain_results,
+                'muscle_scan': muscle_results,
+                'timestamp': datetime.now().isoformat()
+            }
+            
+            return all_results
+            
+        except Exception as error:
+            logging.error(f"OSINT scan failed: {error}")
+            return {'error': str(error)}
+        
+        finally:
+            if self.session:
+                await self.session.close()
+
+    def save_results(self, results: Dict[str, Any], username: str, output_dir: str = "reports"):
+        Path(output_dir).mkdir(exist_ok=True)
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"{output_dir}/osint_{username}_{timestamp}.json"
+        
+        with open(filename, 'w', encoding='utf-8') as f:
+            json.dump(results, f, indent=2, ensure_ascii=False)
+        
+        logging.info(f"{Colors.GREEN}📁 Results saved to: {filename}{Colors.END}")
+        return filename
+
+    def print_summary(self, results: Dict[str, Any]):
+        if 'error' in results:
+            print(f"{Colors.RED}❌ Scan failed: {results['error']}{Colors.END}")
+            return
+        
+        muscle = results.get('muscle_scan', {})
+        stats = muscle.get('statistics', {})
+        brain = results.get('brain_analyze', {})
+        
+        print(f"\n{Colors.BOLD}{Colors.PINK}🔥 HANDY REAPER - OSINT REPORT{Colors.END}")
+        print(f"{Colors.CYAN}{'='*50}{Colors.END}")
+        
+        print(f"{Colors.BOLD}📊 Summary:{Colors.END}")
+        print(f"  Platforms Found: {Colors.GREEN}{stats.get('found', 0)}{Colors.END}")
+        print(f"  Total Checked: {stats.get('total_platforms', 0)}")
+        print(f"  Success Rate: {Colors.CYAN}{stats.get('success_rate', 0):.1f}%{Colors.END}")
+        
+        risk_level = brain.get('risk_assessment', {}).get('level', 'unknown')
+        risk_color = Colors.RED if risk_level == 'high' else Colors.YELLOW if risk_level == 'medium' else Colors.GREEN
+        print(f"  Risk Level: {risk_color}{risk_level.upper()}{Colors.END}")
+        
+        found_platforms = [
+            platform for platform, result in muscle.get('platform_results', {}).items()
+            if result.get('status') == 'found'
+        ]
+        
+        if found_platforms:
+            print(f"\n{Colors.BOLD}🔍 Found Profiles:{Colors.END}")
+            for platform in found_platforms[:10]:
+                print(f"  ✓ {platform}")
+            if len(found_platforms) > 10:
+                print(f"  ... and {len(found_platforms) - 10} more")
+        
+        print(f"{Colors.CYAN}{'='*50}{Colors.END}")
+
+async def main():
+    parser = argparse.ArgumentParser(description="🔥 HANDY REAPER - OSINT Intelligence System")
+    parser.add_argument("username", help="Target username to investigate")
+    parser.add_argument("--proxy", help="HTTP proxy to use")
+    parser.add_argument("--output-dir", default="reports", help="Output directory")
+    parser.add_argument("--no-save", action="store_true", help="Don't save results")
+    
+    args = parser.parse_args()
+    
+    proxy_config = ProxyConfig()
+    if args.proxy:
+        proxy_config.enabled = True
+        proxy_config.http_proxy = args.proxy
+    
+    osint_system = EnhancedOSINTSystem(proxy_config=proxy_config)
+    
+    try:
+        results = await osint_system.full_osint_scan(args.username)
+        osint_system.print_summary(results)
+        
+        if not args.no_save:
+            filename = osint_system.save_results(results, args.username, args.output_dir)
+            print(f"{Colors.GREEN}📄 Full report: {filename}{Colors.END}")
+        
+    except KeyboardInterrupt:
+        logging.info("Scan interrupted by user")
+    except Exception as error:
+        logging.error(f"Unexpected error: {error}")
+
+if __name__ == "__main__":
+    asyncio.run(main())
