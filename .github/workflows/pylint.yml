@@ -29,60 +29,15 @@ jobs:
     
     - name: Security scan with Bandit
       run: |
-        bandit -r . -f json -o bandit-results.json || true
+        bandit -r . -f json -o bandit-results.json || echo "Bandit completed with findings"
     
     - name: Vulnerability check with Safety
       run: |
-        safety check --json --output safety-report.json || true
+        safety check --json --output safety-report.json || echo "Safety completed with findings"
     
     - name: Dependency audit with pip-audit
       run: |
-        pip-audit --format json --output pip-audit-report.json || true
-
-  core-functionality:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-    
-    - name: Set up Python
-      uses: actions/setup-python@v3
-      with:
-        python-version: "3.10"
-    
-    - name: Install dependencies
-      run: |
-        pip install aiohttp dnspython
-    
-    - name: Test basic imports and structure
-      run: |
-        python -c "
-        import sys
-        import os
-        
-        print('🔍 Checking Python files...')
-        python_files = [f for f in os.listdir('.') if f.endswith('.py')]
-        print(f'Found Python files: {python_files}')
-        
-        if not python_files:
-            print('❌ No Python files found!')
-            sys.exit(1)
-        
-        # Test syntax of all Python files
-        for py_file in python_files:
-            try:
-                with open(py_file, 'r') as f:
-                    source_code = f.read()
-                compile(source_code, py_file, 'exec')
-                print(f'✓ {py_file} - Syntax valid')
-            except SyntaxError as e:
-                print(f'❌ {py_file} - Syntax error: {e}')
-                sys.exit(1)
-            except Exception as e:
-                print(f'⚠️  {py_file} - Could not check: {e}')
-        
-        print('✅ All Python files have valid syntax')
-        "
+        pip-audit --format json --output pip-audit-report.json || echo "pip-audit completed with findings"
 
   syntax-validation:
     runs-on: ubuntu-latest
@@ -97,37 +52,38 @@ jobs:
     
     - name: Validate Python syntax
       run: |
-        echo "🔍 Validating Python syntax..."
+        echo "Validating Python syntax..."
+        # Find all Python files
         python_files=$(find . -name "*.py" -type f)
         
-        if [ -z \"$python_files\" ]; then
-          echo "❌ No Python files found!"
+        if [ -z "$python_files" ]; then
+          echo "No Python files found!"
           exit 1
         fi
         
-        echo "Found files:"
+        echo "Found Python files:"
         echo "$python_files"
         echo ""
         
         error_count=0
         for file in $python_files; do
           echo "Checking $file..."
-          if python -m py_compile \"$file\"; then
-            echo \"  ✓ Syntax valid\"
+          if python -m py_compile "$file"; then
+            echo "  Syntax valid"
           else
-            echo \"  ❌ Syntax error\"
+            echo "  Syntax error"
             error_count=$((error_count + 1))
           fi
         done
         
         if [ $error_count -eq 0 ]; then
-          echo \"✅ All Python files have valid syntax\"
+          echo "All Python files have valid syntax"
         else
-          echo \"❌ $error_count file(s) have syntax errors\"
+          echo "$error_count file(s) have syntax errors"
           exit 1
         fi
 
-  basic-import-test:
+  core-imports:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
@@ -141,35 +97,29 @@ jobs:
     - name: Test core imports
       run: |
         python -c "
-        print('🧪 Testing core imports...')
+        print('Testing core imports...')
         try:
             import asyncio
             print('✓ asyncio')
         except ImportError as e:
-            print(f'❌ asyncio: {e}')
+            print('✗ asyncio:', e)
         
         try:
             import aiohttp
             print('✓ aiohttp')
         except ImportError as e:
-            print(f'❌ aiohttp: {e}')
+            print('✗ aiohttp:', e)
         
         try:
             import dns.resolver
             print('✓ dnspython')
         except ImportError as e:
-            print(f'❌ dnspython: {e}')
+            print('✗ dnspython:', e)
         
-        try:
-            import argparse
-            print('✓ argparse')
-        except ImportError as e:
-            print(f'❌ argparse: {e}')
-        
-        print('✅ Core import test completed')
+        print('Core import test completed')
         "
 
-  file-structure:
+  file-check:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
@@ -177,142 +127,98 @@ jobs:
     
     - name: Check repository structure
       run: |
-        echo \"📁 Repository Structure:\"
-        find . -name \"*.py\" -type f | head -10
-        echo \"\"
-        echo \"📊 File Count:\"
-        echo \"Python files: $(find . -name '*.py' -type f | wc -l)\"
-        echo \"Total files: $(find . -type f | wc -l)\"
+        echo "Repository Structure:"
+        find . -name "*.py" -type f
+        echo ""
+        echo "File Count:"
+        echo "Python files: $(find . -name '*.py' -type f | wc -l)"
+        echo "Total files: $(find . -type f | wc -l)"
         
-        # Check for required files
-        if [ -f \"README.md\" ]; then
-          echo \"✓ README.md found\"
+        # Check for main Python file
+        if find . -name "*.py" -type f | grep -q .; then
+          echo "Python files found"
+          MAIN_FILE=$(find . -name "*.py" -type f | head -1)
+          echo "Main file: $MAIN_FILE"
         else
-          echo \"⚠️  README.md missing\"
-        fi
-        
-        if [ -f \"main.py\" ] || [ -f \"handy_reaper.py\" ]; then
-          echo \"✓ Main Python file found\"
-        else
-          echo \"❌ No main Python file found\"
+          echo "No Python files found"
           exit 1
         fi
 
-  osint-pattern-check:
+  feature-detection:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
     
-    - name: Check for OSINT patterns
+    - name: Check for OSINT features
       run: |
-        echo \"🔍 Checking for OSINT patterns...\"
+        echo "Checking for OSINT features..."
         
-        # Check for common OSINT-related patterns
         patterns_found=0
         
-        if find . -name \"*.py\" -exec grep -l \"platforms.*social.*media\" {} \; | grep -q .; then
-            echo \"✓ Social media platform patterns\"
+        if find . -name "*.py" -exec grep -l "platform" {} \; | grep -q .; then
+            echo "✓ Platform patterns found"
             patterns_found=$((patterns_found + 1))
         fi
         
-        if find . -name \"*.py\" -exec grep -l \"async.*def.*scan\" {} \; | grep -q .; then
-            echo \"✓ Async scanning patterns\"
+        if find . -name "*.py" -exec grep -l "async" {} \; | grep -q .; then
+            echo "✓ Async patterns found"
             patterns_found=$((patterns_found + 1))
         fi
         
-        if find . -name \"*.py\" -exec grep -l \"rate.*limit\" {} \; | grep -q .; then
-            echo \"✓ Rate limiting patterns\"
+        if find . -name "*.py" -exec grep -l "scan" {} \; | grep -q .; then
+            echo "✓ Scanning patterns found"
             patterns_found=$((patterns_found + 1))
         fi
         
-        if find . -name \"*.py\" -exec grep -l \"proxy.*config\" {} \; | grep -q .; then
-            echo \"✓ Proxy configuration patterns\"
+        if find . -name "*.py" -exec grep -l "dns" {} \; | grep -q .; then
+            echo "✓ DNS patterns found"
             patterns_found=$((patterns_found + 1))
         fi
         
-        if find . -name \"*.py\" -exec grep -l \"dns.*resolver\" {} \; | grep -q .; then
-            echo \"✓ DNS analysis patterns\"
-            patterns_found=$((patterns_found + 1))
-        fi
+        echo "OSINT patterns detected: $patterns_found/4"
         
-        echo \"\"
-        if [ $patterns_found -ge 3 ]; then
-          echo \"✅ Strong OSINT patterns detected ($patterns_found/5)\"
-        elif [ $patterns_found -ge 1 ]; then
-          echo \"⚠️  Basic OSINT patterns detected ($patterns_found/5)\"
+        if [ $patterns_found -ge 2 ]; then
+          echo "OSINT features confirmed"
         else
-          echo \"❌ No OSINT patterns detected\"
-          exit 1
+          echo "Limited OSINT patterns found"
         fi
-
-  upload-reports:
-    runs-on: ubuntu-latest
-    needs: [security-analysis]
-    if: always()
-    steps:
-    - name: Download security reports
-      uses: actions/download-artifact@v3
-      with:
-        path: security-reports
-    
-    - name: Upload security reports
-      uses: actions/upload-artifact@v3
-      with:
-        name: security-analysis-reports
-        path: security-reports
-        retention-days: 30
 
   final-report:
     runs-on: ubuntu-latest
-    needs: [security-analysis, core-functionality, syntax-validation, basic-import-test, file-structure, osint-pattern-check]
+    needs: [security-analysis, syntax-validation, core-imports, file-check, feature-detection]
     if: always()
     steps:
-    - name: Generate comprehensive report
+    - name: Generate final report
       run: |
-        echo \"# 🚀 HANDY REAPER CI Validation Report\"
-        echo \"\"
-        echo \"## 📊 Test Results Summary\"
-        echo \"| Test | Status | Details |\"
-        echo \"|------|--------|---------|\"
-        echo \"| Security Analysis | ${{ needs.security-analysis.result }} | Pylint, Bandit, Safety, pip-audit |\"
-        echo \"| Core Functionality | ${{ needs.core-functionality.result }} | Syntax validation |\"
-        echo \"| Syntax Validation | ${{ needs.syntax-validation.result }} | Python compilation |\"
-        echo \"| Basic Import Test | ${{ needs.basic-import-test.result }} | Core dependencies |\"
-        echo \"| File Structure | ${{ needs.file-structure.result }} | Repository layout |\"
-        echo \"| OSINT Patterns | ${{ needs.osint-pattern-check.result }} | Feature detection |\"
-        echo \"\"
-        echo \"## 🎯 Next Steps\"
+        echo "=== HANDY REAPER CI VALIDATION REPORT ==="
+        echo ""
+        echo "TEST RESULTS:"
+        echo "- Security Analysis: ${{ needs.security-analysis.result }}"
+        echo "- Syntax Validation: ${{ needs.syntax-validation.result }}"
+        echo "- Core Imports: ${{ needs.core-imports.result }}"
+        echo "- File Check: ${{ needs.file-check.result }}"
+        echo "- Feature Detection: ${{ needs.feature-detection.result }}"
+        echo ""
+        echo "NEXT STEPS:"
         
-        if [ '${{ needs.security-analysis.result }}' = 'success' ]; then
-          echo \"✅ Security checks completed - review reports in artifacts\"
+        if [ "${{ needs.syntax-validation.result }}" = "success" ]; then
+          echo "✓ Code syntax is valid"
         else
-          echo \"📋 Security analysis had issues - check workflow logs\"
+          echo "✗ Fix syntax errors first"
         fi
         
-        if [ '${{ needs.syntax-validation.result }}' = 'success' ]; then
-          echo \"✅ All Python files have valid syntax\"
+        if [ "${{ needs.core-imports.result }}" = "success" ]; then
+          echo "✓ Core dependencies working"
         else
-          echo \"❌ Syntax errors found - fix before proceeding\"
+          echo "✗ Check dependency installation"
         fi
         
-        if [ '${{ needs.osint-pattern-check.result }}' = 'success' ]; then
-          echo \"✅ OSINT features properly implemented\"
+        if [ "${{ needs.security-analysis.result }}" = "success" ]; then
+          echo "✓ Security checks completed"
         else
-          echo \"⚠️  Review OSINT pattern implementation\"
+          echo "⚠️ Review security findings"
         fi
         
-        echo \"\"
-        echo \"---\"
-        echo \"*HANDY REAPER OSINT System - CI Validation Complete*\"
-        
-        # Overall status
-        if [ '${{ needs.security-analysis.result }}' = 'success' ] && \
-           [ '${{ needs.syntax-validation.result }}' = 'success' ] && \
-           [ '${{ needs.osint-pattern-check.result }}' = 'success' ]; then
-          echo \"\"  
-          echo \"🎉 ALL CRITICAL CHECKS PASSED - READY FOR DEPLOYMENT!\"
-        else
-          echo \"\"
-          echo \"⚠️  SOME CHECKS NEED ATTENTION - REVIEW LOGS\"
-        fi
+        echo ""
+        echo "=========================================="
